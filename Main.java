@@ -28,7 +28,7 @@ public class Main extends Application
     public int pixel = 50;
     public int border = 2;
 
-    public int flags_set = 0;
+    public int flags_set = 25;
     public boolean first_click = false;
     public boolean boom = false;
     public boolean win = false;
@@ -105,6 +105,12 @@ public class Main extends Application
                 is_mine[tx][ty] = true;
                 temp_mines++;
             }
+        }
+
+        if(is_flag[fx][fy])
+        {
+            is_flag[fx][fy] = false;
+            flags_set--;
         }
 
         first_click = true;
@@ -206,6 +212,12 @@ public class Main extends Application
                         }
                         else
                             {
+                                if(is_flag[tx][ty])
+                                {
+                                    is_flag[tx][ty] = false;
+                                    flags_set--;
+                                }
+
                                 is_visible[tx][ty] = true;
                             }
 
@@ -224,6 +236,12 @@ public class Main extends Application
                             }
                             else
                                 {
+                                    if(is_flag[tx][ty])
+                                    {
+                                        is_flag[tx][ty] = false;
+                                        flags_set--;
+                                    }
+
                                     is_visible[tx][ty] = true;
                                 }
                         }
@@ -255,10 +273,7 @@ public class Main extends Application
             {
                 win = true;
             }
-            draw();
-        }
-        else
-        {
+            calc_flags();
             draw();
         }
 
@@ -266,6 +281,7 @@ public class Main extends Application
 
     public boolean is_win()
     {
+        int temp_mines = 0;
         boolean result = true;
         for(int i = 0; i < x; i++)
         {
@@ -273,11 +289,43 @@ public class Main extends Application
             {
                 if(is_mine[i][j])
                 {
+                    temp_mines++;
                     result = result && is_flag[i][j];
                 }
             }
         }
-        return result;
+        if(temp_mines == 0)
+        {
+            return false;
+        }
+        else
+        {
+            return result;
+        }
+
+    }
+
+    public void calc_flags()
+    {
+        int flags = 0;
+
+        for(int i = 0; i < x; i++)
+        {
+            for(int j = 0; j < y; j++)
+            {
+                if(is_visible[i][j] && is_flag[i][j])
+                {
+                    is_flag[i][j] = false;
+                }
+
+                if(is_flag[i][j])
+                {
+                    flags++;
+                }
+            }
+        }
+
+        flags_set = flags;
     }
 
     public void flood_fill(int x, int y)
@@ -303,17 +351,113 @@ public class Main extends Application
     public boolean flood_fill_1(boolean[][] hits, int x, int y)
     {
         if (x < 0 || x >= this.x || y < 0 || y >= this.y) return false;
-        if(hits[x][y])return false;
-        if (mines[x][y] != 0) return false;
+        if(hits[x][y])
+        {
+            if(is_flag[x][y])
+            {
+                is_flag[x][y] = false;
+                flags_set--;
+            }
+            return false;
+        }
+        if (mines[x][y] != 0)
+        {
+            if(is_flag[x][y])
+            {
+                is_flag[x][y] = false;
+                flags_set--;
+            }
+            return false;
+        }
+
+        if(is_flag[x][y])
+        {
+            is_flag[x][y] = false;
+            flags_set--;
+        }
+
         is_visible[x][y] = true;
-        if((x > 0)&&(y > 0))is_visible[x - 1][y - 1] = true;
-        if(y > 0)is_visible[x][y - 1] = true;
-        if((x < this.x - 1)&&(y > 0))is_visible[x + 1][y - 1] = true;
-        if(x > 0) is_visible[x - 1][y] = true;
-        if(x < this.x - 1)is_visible[x + 1][y] = true;
-        if((x > 0)&&(y < this.y - 1))is_visible[x - 1][y + 1] = true;
-        if(y < this.y - 1)is_visible[x][y + 1] = true;
-        if((x < this.x - 1)&&(y < this.y - 1))is_visible[x + 1][y + 1] = true;
+
+        if((x > 0)&&(y > 0))
+        {
+            if(is_flag[x][y])
+            {
+                is_flag[x][y] = false;
+                flags_set--;
+            }
+            is_visible[x - 1][y - 1] = true;
+        }
+
+        if(y > 0)
+        {
+            if(is_flag[x][y])
+            {
+                is_flag[x][y] = false;
+                flags_set--;
+            }
+            is_visible[x][y - 1] = true;
+        }
+
+        if((x < this.x - 1)&&(y > 0))
+        {
+            if(is_flag[x][y])
+            {
+                is_flag[x][y] = false;
+                flags_set--;
+            }
+            is_visible[x + 1][y - 1] = true;
+        }
+
+        if(x > 0)
+        {
+            if(is_flag[x][y])
+            {
+                is_flag[x][y] = false;
+                flags_set--;
+            }
+            is_visible[x - 1][y] = true;
+        }
+
+        if(x < this.x - 1)
+        {
+            if(is_flag[x][y])
+            {
+                is_flag[x][y] = false;
+                flags_set--;
+            }
+            is_visible[x + 1][y] = true;
+        }
+
+        if((x > 0)&&(y < this.y - 1))
+        {
+            if(is_flag[x][y])
+            {
+                is_flag[x][y] = false;
+                flags_set--;
+            }
+            is_visible[x - 1][y + 1] = true;
+        }
+
+        if(y < this.y - 1)
+        {
+            if(is_flag[x][y])
+            {
+                is_flag[x][y] = false;
+                flags_set--;
+            }
+            is_visible[x][y + 1] = true;
+        }
+
+        if((x < this.x - 1)&&(y < this.y - 1))
+        {
+            if(is_flag[x][y])
+            {
+                is_flag[x][y] = false;
+                flags_set--;
+            }
+            is_visible[x + 1][y + 1] = true;
+        }
+
         hits[x][y] = true;
         return true;
     }
