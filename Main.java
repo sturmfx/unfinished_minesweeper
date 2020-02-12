@@ -31,6 +31,7 @@ public class Main extends Application
     public int flags_set = 0;
     public boolean first_click = false;
     public boolean boom = false;
+    public boolean win = false;
 
     boolean[][] is_visible = new boolean[x][y];
     boolean[][] is_flag = new boolean[x][y];
@@ -86,12 +87,14 @@ public class Main extends Application
         flags_set = 0;
         first_click = false;
         boom = false;
+        win = false;
 
     }
 
     public void start(int fx, int fy)
     {
         int temp_mines = 0;
+
         while(temp_mines < mine_amount)
         {
             int tx = random.nextInt(x);
@@ -103,6 +106,7 @@ public class Main extends Application
                 temp_mines++;
             }
         }
+
         first_click = true;
         draw();
     }
@@ -164,6 +168,21 @@ public class Main extends Application
             }
         }
         report.setText("FLAGS SET: " + flags_set);
+        if(is_win())
+        {
+            gc.setFill(Color.BLUE);
+            gc.fillPolygon(new double[]{0, 40, 80, 120, 160, 200, 240, 160, 120, 80},
+                    new double[]{0, 0, 80, 40, 80, 0, 0, 120, 80, 120}, 10);
+
+            gc.fillPolygon(new double[]{280, 320, 320, 280},
+                    new double[]{0, 0, 20, 20}, 4);
+
+            gc.fillPolygon(new double[]{280, 320, 320, 280},
+                    new double[]{40, 40, 120, 120}, 4);
+
+            gc.fillPolygon(new double[]{360, 400, 440, 440, 480, 480, 440, 400, 400, 360},
+                    new double[]{0, 0, 80, 0, 0, 120, 120, 40, 120, 120}, 10);
+        }
     }
 
     public void can(MouseEvent event)
@@ -171,70 +190,94 @@ public class Main extends Application
         int tx = (int) (event.getX() / pixel);
         int ty = (int) (event.getY() / pixel);
 
-        if(!boom)
+        if(!win)
         {
-            if (event.getButton() == MouseButton.PRIMARY)
+            if (!boom)
             {
-                if (!first_click)
+                if (event.getButton() == MouseButton.PRIMARY)
                 {
-                    start(tx, ty);
-                    calculate();
-                    if(mines[tx][ty] == 0)
+                    if (!first_click)
                     {
-                        flood_fill(tx, ty);
-                    }
-                    else
-                    {
-                        is_visible[tx][ty] = true;
-                    }
-
-                }
-                else
-                {
-                    if(is_mine[tx][ty])
-                    {
-                        boom = true;
-                    }
-                    else
-                    {
-                        if(mines[tx][ty] == 0)
+                        start(tx, ty);
+                        calculate();
+                        if (mines[tx][ty] == 0)
                         {
                             flood_fill(tx, ty);
                         }
                         else
-                        {
-                            is_visible[tx][ty] = true;
-                        }
-                    }
-                }
+                            {
+                                is_visible[tx][ty] = true;
+                            }
 
-            }
-            else
-            {
-                if (!is_visible[tx][ty])
-                {
-                    if (!is_flag[tx][ty])
-                    {
-                        if(flags_set < mine_amount)
-                        {
-                            is_flag[tx][ty] = true;
-                            flags_set++;
-                        }
                     }
                     else
+                        {
+                        if (is_mine[tx][ty])
+                        {
+                            boom = true;
+                        }
+                        else
+                            {
+                            if (mines[tx][ty] == 0)
+                            {
+                                flood_fill(tx, ty);
+                            }
+                            else
+                                {
+                                    is_visible[tx][ty] = true;
+                                }
+                        }
+                    }
+
+                } else
                     {
-
-                            is_flag[tx][ty] = false;
-                            flags_set--;
-
+                    if (!is_visible[tx][ty])
+                    {
+                        if (!is_flag[tx][ty])
+                        {
+                            if (flags_set < mine_amount)
+                            {
+                                is_flag[tx][ty] = true;
+                                flags_set++;
+                            }
+                        }
+                        else
+                            {
+                                is_flag[tx][ty] = false;
+                                flags_set--;
+                            }
                     }
                 }
-            }
 
-            event.consume();
+                event.consume();
+            }
+            if(is_win())
+            {
+                win = true;
+            }
+            draw();
+        }
+        else
+        {
+            draw();
         }
 
-        draw();
+    }
+
+    public boolean is_win()
+    {
+        boolean result = true;
+        for(int i = 0; i < x; i++)
+        {
+            for(int j = 0; j < y; j++)
+            {
+                if(is_mine[i][j])
+                {
+                    result = result && is_flag[i][j];
+                }
+            }
+        }
+        return result;
     }
 
     public void flood_fill(int x, int y)
@@ -368,3 +411,4 @@ public class Main extends Application
         launch(args);
     }
 }
+
